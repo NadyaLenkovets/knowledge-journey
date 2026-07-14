@@ -1,5 +1,6 @@
 import { Box, HStack, Text, VStack } from '@chakra-ui/react'
 import type { ReactNode } from 'react'
+import { useState } from 'react'
 import type { ExerciseExplanation, ExerciseMode } from '@/types/exercise'
 import { answerStatusStyles, palette, type AnswerStatus } from '@/theme/palette'
 
@@ -12,11 +13,16 @@ type ExerciseShellProps = {
   score?: number
   maxScore?: number
   explanation: ExerciseExplanation | null
+  /** Переопределяет текст explanation (свободные ответы / demo-grade). */
+  feedbackMessage?: string | null
   onCheck?: () => void
   onNext?: () => void
   canCheck?: boolean
   checkHint?: string
   accentBorder?: string
+  hint?: string
+  /** Таймаут / блокировка ввода (этап 3+). */
+  disabled?: boolean
 }
 
 function resolveFeedback(
@@ -43,26 +49,44 @@ export function ExerciseShell({
   score,
   maxScore,
   explanation,
+  feedbackMessage = null,
   onCheck,
   onNext,
   canCheck = true,
   checkHint,
   accentBorder = 'accent',
+  hint,
+  disabled = false,
 }: ExerciseShellProps) {
+  const [hintOpen, setHintOpen] = useState(false)
   const isAnswered = uiState === 'answered'
   const feedback = resolveFeedback(isCorrect, score, maxScore)
-  const showFeedback = isAnswered && explanation !== null && feedback !== null
+  const showFeedback =
+    isAnswered &&
+    feedback !== null &&
+    (explanation !== null || Boolean(feedbackMessage))
   const isTestMode = mode === 'test'
   const shellTitle = title ?? (isTestMode ? 'Вопрос' : 'Проверь себя')
   const styles = feedback ? answerStatusStyles[feedback] : null
 
   const cardBorderColor = styles?.border ?? palette.border
-  const cardBg = isAnswered ? (styles?.cardBg ?? palette.surfaceCard) : palette.surfaceCard
+  const cardBg = isAnswered
+    ? (styles?.cardBg ?? palette.surfaceCard)
+    : palette.surfaceCard
 
   const scorePercent =
     score !== undefined && maxScore !== undefined && maxScore > 0
       ? Math.round((score / maxScore) * 100)
       : null
+
+  const checkEnabled = canCheck && !disabled
+
+  const feedbackBody =
+    feedbackMessage ??
+    (feedback === 'incorrect'
+      ? explanation?.incorrect
+      : explanation?.correct) ??
+    ''
 
   return (
     <Box
@@ -77,6 +101,7 @@ export function ExerciseShell({
       role="group"
       aria-label="Интерактивное упражнение"
       transition="background 0.2s, border-color 0.2s"
+      opacity={disabled && !isAnswered ? 0.75 : 1}
     >
       <Text
         fontSize="sm"
@@ -91,6 +116,39 @@ export function ExerciseShell({
 
       <VStack align="stretch" gap={5}>
         {children}
+
+        {hint && !isAnswered && (
+          <Box>
+            <button
+              type="button"
+              onClick={() => setHintOpen((v) => !v)}
+              disabled={disabled}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: palette.fgMuted,
+                cursor: disabled ? 'not-allowed' : 'pointer',
+                fontFamily: 'inherit',
+                fontSize: '14px',
+                padding: 0,
+                textDecoration: 'underline',
+              }}
+            >
+              {hintOpen ? 'Скрыть подсказку' : 'Показать подсказку'}
+            </button>
+            {hintOpen && (
+              <Text mt={2} fontSize="sm" color={palette.fgMuted}>
+                {hint}
+              </Text>
+            )}
+          </Box>
+        )}
+
+        {disabled && !isAnswered && (
+          <Text fontSize="sm" color={palette.error}>
+            Время вышло — ответ заблокирован.
+          </Text>
+        )}
 
         {showFeedback && styles && (
           <Box
@@ -120,9 +178,7 @@ export function ExerciseShell({
               </Text>
             </HStack>
             <Text color={palette.fg} lineHeight="tall" fontSize="md">
-              {feedback === 'incorrect'
-                ? explanation.incorrect
-                : explanation.correct}
+              {feedbackBody}
             </Text>
           </Box>
         )}
@@ -130,16 +186,18 @@ export function ExerciseShell({
         {uiState === 'idle' && onCheck && (
           <Box pt={4} borderTopWidth="1px" borderColor={palette.border}>
             <Text fontSize="sm" color={palette.fgMuted} mb={3}>
-              {checkHint ??
-                (canCheck
-                  ? 'Нажмите кнопку, чтобы проверить ответ'
-                  : 'Сначала выберите вариант ответа')}
+              {disabled
+                ? 'Проверка недоступна'
+                : (checkHint ??
+                  (canCheck
+                    ? 'Нажмите кнопку, чтобы проверить ответ'
+                    : 'Сначала выберите вариант ответа'))}
             </Text>
             <button
               type="button"
               data-testid="exercise-check"
-              onClick={() => canCheck && onCheck()}
-              disabled={!canCheck}
+              onClick={() => checkEnabled && onCheck()}
+              disabled={!checkEnabled}
               style={{
                 display: 'block',
                 width: '100%',
@@ -148,10 +206,12 @@ export function ExerciseShell({
                 fontSize: '16px',
                 fontWeight: 700,
                 borderRadius: '9999px',
-                border: `2px solid ${canCheck ? palette.accent : palette.border}`,
-                background: canCheck ? palette.accent : palette.surfaceElevated,
-                color: canCheck ? palette.onAccent : palette.disabled,
-                cursor: canCheck ? 'pointer' : 'not-allowed',
+                border: `2px solid ${checkEnabled ? palette.accent : palette.border}`,
+                background: checkEnabled
+                  ? palette.accent
+                  : palette.surfaceElevated,
+                color: checkEnabled ? '#FFFFFF' : palette.disabled,
+                cursor: checkEnabled ? 'pointer' : 'not-allowed',
                 fontFamily: 'inherit',
               }}
             >
@@ -175,7 +235,7 @@ export function ExerciseShell({
                 borderRadius: '9999px',
                 border: `2px solid ${palette.accent}`,
                 background: palette.accent,
-                color: palette.onAccent,
+                color: '#FFFFFF',
                 cursor: 'pointer',
                 fontFamily: 'inherit',
               }}

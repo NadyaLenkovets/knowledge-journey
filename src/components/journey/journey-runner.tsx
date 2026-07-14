@@ -1,7 +1,7 @@
 import { Box, Heading, HStack, Progress, Text, VStack } from '@chakra-ui/react'
 import { useCallback, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ActivityPlaceholder } from '@/components/journey/activity-placeholder'
+import { ActivityStep } from '@/components/journey/activity-step'
 import { NavBackLink } from '@/components/nav-back-link'
 import type { ActivityResult } from '@/types/activity'
 import type { Journey } from '@/types/journey'
@@ -203,19 +203,12 @@ export function JourneyRunner({ journey }: JourneyRunnerProps) {
         )}
       </Box>
 
-      <Box
-        p={6}
-        borderRadius="xl"
-        borderWidth="1px"
-        borderColor="border"
-        bg="bg.card"
-      >
-        <ActivityPlaceholder
+      <Box>
+        <ActivityStep
           key={current.activity.id}
           activity={current.activity}
           onResult={handleResult}
           onNext={handleNext}
-          awaitingNext={awaitingNext}
         />
       </Box>
     </VStack>
