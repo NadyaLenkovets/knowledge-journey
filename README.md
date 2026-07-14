@@ -18,6 +18,8 @@ npm run dev
 
 Открыть: http://localhost:5173/home (ширина окна ≥ 1280px).
 
+**Demo без API:** `/create` → кнопка «Пройти demo» → пройти шаги → отчёт.
+
 Опционально API-заглушка (health):
 
 ```bash

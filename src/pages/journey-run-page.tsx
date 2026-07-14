@@ -1,36 +1,40 @@
-import { Box, Button, Heading, Text, VStack } from '@chakra-ui/react'
+import { Box, Text } from '@chakra-ui/react'
+import { useMemo } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { NavBackLink } from '@/components/nav-back-link'
+import { JourneyRunner } from '@/components/journey/journey-runner'
+import { getDemoJourney } from '@/content/demo/demo-journey'
+import { loadJourney, saveJourney } from '@/store/journey-store'
 
-/** Заготовка прохождения (JourneyRunner — этапы 1–3). */
 export function JourneyRunPage() {
   const { id } = useParams<{ id: string }>()
 
-  return (
-    <Box maxW="720px">
-      <NavBackLink to="/home" label="На главную" />
-      <VStack align="stretch" gap={4} mt={6}>
-        <Heading size="xl" color="fg">
-          Прохождение journey
-        </Heading>
-        <Text color="fg.muted">
-          ID: <Text as="span" color="accent">{id ?? '—'}</Text>
+  const journey = useMemo(() => {
+    if (!id) return null
+    const stored = loadJourney(id)
+    if (stored) return stored
+    if (id === 'demo') {
+      const demo = getDemoJourney()
+      saveJourney(demo)
+      return demo
+    }
+    return null
+  }, [id])
+
+  if (!journey) {
+    return (
+      <Box maxW="640px">
+        <Text color="fg" mb={3}>
+          Journey не найден
         </Text>
-        <Text color="fg.muted">
-          Чекпоинты, таймер и упражнения появятся на этапах 1–3. Сейчас только
-          каркас маршрута.
+        <Text color="fg.muted" mb={4}>
+          Начните demo с экрана создания или откройте ссылку /journey/demo.
         </Text>
-        <Button
-          asChild
-          alignSelf="flex-start"
-          bg="accent"
-          color="on.accent"
-          fontWeight="600"
-          _hover={{ bg: 'accent.hover' }}
-        >
-          <Link to={`/journey/${id ?? 'demo'}/report`}>К отчёту (заглушка)</Link>
-        </Button>
-      </VStack>
-    </Box>
-  )
+        <Link to="/create" style={{ color: '#84CC16' }}>
+          К созданию
+        </Link>
+      </Box>
+    )
+  }
+
+  return <JourneyRunner journey={journey} />
 }

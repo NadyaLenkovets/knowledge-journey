@@ -121,6 +121,10 @@ export function HomePage() {
               </Link>
             </Button>
           </Box>
+          <Text fontSize="sm" color="fg.muted" css={heroSubtitleMotion}>
+            Уже есть готовый demo без API — на экране создания нажмите «Пройти
+            demo».
+          </Text>
         </VStack>
       </Box>
     </Box>

@@ -26,18 +26,11 @@ test.describe('P0 smoke — Knowledge Journey каркас', () => {
     ).toBeVisible()
   })
 
-  test('цепочка заглушек create → generating → journey → report', async ({
-    page,
-  }) => {
+  test('demo journey стартует и показывает первый шаг', async ({ page }) => {
     await page.goto('/create')
-    await page.getByRole('link', { name: 'Далее (заглушка)' }).click()
-    await expect(page).toHaveURL(/\/generating$/)
-    await page.getByRole('link', { name: 'Открыть заглушку прохождения' }).click()
+    await page.getByTestId('start-demo').click()
     await expect(page).toHaveURL(/\/journey\/demo$/)
-    await page.getByRole('link', { name: 'К отчёту (заглушка)' }).click()
-    await expect(page).toHaveURL(/\/journey\/demo\/report$/)
-    await expect(
-      page.getByRole('heading', { name: 'Отчёт о путешествии' }),
-    ).toBeVisible()
+    await expect(page.getByText('Галлюцинации LLM').first()).toBeVisible()
+    await expect(page.getByTestId('exercise-check')).toBeVisible()
   })
 })
