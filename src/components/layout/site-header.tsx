@@ -27,12 +27,8 @@ export function SiteHeader() {
       py={4}
     >
       <Flex maxW="1200px" mx="auto" align="center" justify="space-between">
-        <Link
-          asChild
-          {...noFocusRing}
-          _hover={{ textDecoration: 'none' }}
-        >
-          <NavLink to="/main" style={{ outline: 'none' }}>
+        <Link asChild {...noFocusRing} _hover={{ textDecoration: 'none' }}>
+          <NavLink to="/home" style={{ outline: 'none' }}>
             <Box
               className="brand-link"
               display="inline-flex"
@@ -77,7 +73,7 @@ export function SiteHeader() {
                     },
                   }}
                 >
-                  Prompt Lab
+                  Knowledge Journey
                 </Text>
               </HStack>
             </Box>
@@ -86,8 +82,8 @@ export function SiteHeader() {
 
         <HStack gap={8}>
           <Link asChild {...navLinkStyle}>
-            <NavLink to="/tests" style={{ outline: 'none' }}>
-              Тесты
+            <NavLink to="/create" style={{ outline: 'none' }}>
+              Создать
             </NavLink>
           </Link>
         </HStack>

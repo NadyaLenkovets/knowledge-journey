@@ -6,30 +6,33 @@
 
 ## Этап 0 — репозиторий и каркас
 
-- Статус: `in_progress` (частично)
+- Статус: `waiting_review`
 - Дата: 2026-07-14
 
 ### Сделано
 
-- Создана папка `D:\Nadya\Programming\Courses\AI+Code\knowledge-journey` **рядом с** `prompt-lab`
-- Скопирована кодовая база Prompt Lab (без `node_modules`, `dist`, `.git`)
-- Инициализирован новый git-репозиторий (`git init`)
-- Переименован npm-пакет → `knowledge-journey`
-- Заголовок страницы → Knowledge Journey
-- В `.gitignore` добавлены `.env` / `.env.*` (+ `.env.example` разрешён)
-- Черновой `README.md`, этот файл `PROGRESS.md`
+- Репозиторий на базе Prompt Lab, пакет `knowledge-journey`
+- Бренд в UI: шапка **Knowledge Journey**, hero «Путешествие по знаниям», CTA
+- Маршруты KJ: `/home`, `/create`, `/generating`, `/journey/:id`, `/journey/:id/report` (+ редирект `/` и `/main` → `/home`)
+- Старые экраны статей/тестов Prompt Lab убраны из роутера и удалены страницы
+- Заготовка `server/index.ts` (Hono): `GET /api/health`
+- Vite proxy `/api` → `localhost:3001`
+- `.env.example`, скрипты `dev:server`, зависимости `hono` / `@hono/node-server` / `tsx`
+- E2E: обновлён P0 smoke под новые маршруты; старые PL-specs удалены
+- README обновлён под этап 0
 
-### Ещё не сделано в Этапе 0
+Компоненты упражнений и `utils/evaluate-*` сохранены для этапов 1–2 (пока не подключены к новым экранам).
 
-- Бренд в UI (шапка, hero)
-- Маршруты KJ (`/home`, `/create`, …)
-- Заготовка `server/` + Vite proxy `/api`
-- Чистка статических статей Prompt Lab как продукта
+### Как проверить
 
-### Как проверить сейчас
-
-1. Открыть в Cursor папку `D:\Nadya\Programming\Courses\AI+Code\knowledge-journey` (текущий workspace Модуль 2 пока пустой).
-2. `cd` туда → `npm install` → `npm run dev` — пока ещё UI Prompt Lab (ожидаемо до дожима Этапа 0).
+1. `npm install`
+2. `npm run dev` → http://localhost:5173/home  
+   - в шапке «Knowledge Journey»  
+   - заголовок «Путешествие по знаниям»  
+   - кнопка «Начать путешествие» → `/create`
+3. Пройти заглушки: Создать → Далее → заглушка прохождения → отчёт
+4. (Опционально) `cp .env.example .env` && `npm run dev:server` → открыть http://localhost:3001/api/health — `{"ok":true,...}`
+5. `npm run lint` и `npm run build` — без ошибок
 
 ### Заметки ревью
 

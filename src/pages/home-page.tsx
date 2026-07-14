@@ -1,10 +1,7 @@
-import { Box, Heading, SimpleGrid, Text } from '@chakra-ui/react'
+import { Box, Button, Heading, Text, VStack } from '@chakra-ui/react'
 import type { SystemStyleObject } from '@chakra-ui/react'
 import { keyframes } from '@emotion/react'
 import { Link } from 'react-router-dom'
-import { ArticleCoverImage } from '@/components/article-cover-image'
-import { getArticleCover } from '@/content/article-covers'
-import { articlesIndex } from '@/content/articles-index'
 
 const heroTitleReveal = keyframes`
   0% {
@@ -61,13 +58,12 @@ const heroSubtitleMotion: SystemStyleObject = {
   },
 }
 
-export function MainPage() {
+export function HomePage() {
   return (
     <Box>
       <Box
         position="relative"
-        py={16}
-        mb={12}
+        py={20}
         textAlign="center"
         borderRadius="2xl"
         overflow="hidden"
@@ -89,10 +85,9 @@ export function MainPage() {
           pointerEvents: 'none',
         }}
       >
-        <Box position="relative" zIndex={1}>
+        <VStack position="relative" zIndex={1} gap={6}>
           <Heading
             size="4xl"
-            mb={4}
             color="fg"
             fontFamily="'Onest', Inter, system-ui, sans-serif"
             fontWeight="600"
@@ -100,7 +95,7 @@ export function MainPage() {
             lineHeight="1.12"
             css={heroTitleMotion}
           >
-            Практика промпт-инжиниринга
+            Путешествие по знаниям
           </Heading>
           <Text
             fontSize="xl"
@@ -109,53 +104,25 @@ export function MainPage() {
             mx="auto"
             css={heroSubtitleMotion}
           >
-            Короткие статьи с упражнениями: читаете абзац — сразу проверяете
-            понимание.
+            Загрузите тему или текст — система соберёт персональный journey с
+            проверкой понимания и финальным отчётом.
           </Text>
-        </Box>
-      </Box>
-
-      <SimpleGrid columns={3} gap={6}>
-        {articlesIndex.map((article) => {
-          const cover = getArticleCover(article.slug)
-          return (
-            <Link
-              key={article.slug}
-              to={`/article/${article.slug}`}
-              style={{ textDecoration: 'none' }}
+          <Box css={heroSubtitleMotion}>
+            <Button
+              asChild
+              size="lg"
+              bg="accent"
+              color="#FFFFFF"
+              fontWeight="600"
+              _hover={{ bg: 'accent.hover', color: '#FFFFFF' }}
             >
-              <Box
-                h="full"
-                display="flex"
-                flexDirection="column"
-                bg="bg.card"
-                borderRadius="card"
-                borderWidth="1px"
-                borderColor="border"
-                overflow="hidden"
-                transition="border-color 0.2s, box-shadow 0.2s"
-                _hover={{
-                  borderColor: 'accent',
-                  boxShadow: '0 0 0 1px rgba(132, 204, 22, 0.35)',
-                }}
-              >
-                {cover && <ArticleCoverImage cover={cover} variant="card" />}
-                <Box p={6} flex={1}>
-                  <Text fontSize="sm" color="accent" mb={2}>
-                    {article.readingTimeMin} мин · 2 упражнения · разные типы
-                  </Text>
-                  <Heading size="lg" mb={3} color="#84CC16">
-                    {article.title}
-                  </Heading>
-                  <Text color="fg.muted" fontSize="md">
-                    {article.description}
-                  </Text>
-                </Box>
-              </Box>
-            </Link>
-          )
-        })}
-      </SimpleGrid>
+              <Link to="/create" style={{ color: '#FFFFFF' }}>
+                Начать путешествие
+              </Link>
+            </Button>
+          </Box>
+        </VStack>
+      </Box>
     </Box>
   )
 }

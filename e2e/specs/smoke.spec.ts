@@ -1,54 +1,43 @@
-import { test, expect } from '@playwright/test'
-import { articlesIndex } from '../../src/content/articles-index'
-import { testsIndex } from '../../src/content/tests-index'
+import { expect, test } from '@playwright/test'
 
-test.describe('P0 — Smoke', () => {
-  test('редирект / → /main', async ({ page }) => {
-    await page.goto('/')
-    await expect(page).toHaveURL(/\/main$/)
-  })
-
-  test('главная: hero и три статьи', async ({ page }) => {
-    await page.goto('/main')
+test.describe('P0 smoke — Knowledge Journey каркас', () => {
+  test('главная показывает бренд и CTA', async ({ page }) => {
+    await page.goto('/home')
+    await expect(page.getByText('Knowledge Journey').first()).toBeVisible()
     await expect(
-      page.getByRole('heading', { name: 'Практика промпт-инжиниринга' }),
+      page.getByRole('heading', { name: 'Путешествие по знаниям' }),
     ).toBeVisible()
-    await expect(page.getByText(/Короткие статьи с упражнениями/)).toBeVisible()
-    for (const article of articlesIndex) {
-      await expect(page.getByRole('link', { name: new RegExp(article.title) })).toBeVisible()
-    }
+    await expect(
+      page.getByRole('link', { name: 'Начать путешествие' }),
+    ).toBeVisible()
   })
 
-  test('хедер: навигация', async ({ page }) => {
-    await page.goto('/main')
-    await page.getByRole('link', { name: 'Тесты', exact: true }).click()
-    await expect(page).toHaveURL(/\/tests$/)
-
-    await page.getByRole('link', { name: 'Prompt Lab' }).click()
-    await expect(page).toHaveURL(/\/main$/)
+  test('корневой URL редиректит на /home', async ({ page }) => {
+    await page.goto('/')
+    await expect(page).toHaveURL(/\/home$/)
   })
 
-  test('страница тестов: intro и карточки', async ({ page }) => {
-    await page.goto('/tests')
-    await expect(page.getByRole('heading', { name: 'Тесты по темам' })).toBeVisible()
-    await expect(page.getByText(/Здесь можно проверить себя по темам из статей/)).toBeVisible()
-    for (const topic of testsIndex) {
-      await expect(page.getByRole('heading', { name: topic.title })).toBeVisible()
-      await expect(page.getByText(topic.description)).toBeVisible()
-    }
+  test('маршрут /create открывается из шапки', async ({ page }) => {
+    await page.goto('/home')
+    await page.getByRole('link', { name: 'Создать' }).click()
+    await expect(page).toHaveURL(/\/create$/)
+    await expect(
+      page.getByRole('heading', { name: 'Новое путешествие' }),
+    ).toBeVisible()
   })
 
-  test('несуществующая статья', async ({ page }) => {
-    await page.goto('/article/unknown-slug')
-    await expect(page.getByText('Статья не найдена')).toBeVisible()
-    await page.getByRole('link', { name: 'На главную' }).click()
-    await expect(page).toHaveURL(/\/main$/)
-  })
-
-  test('несуществующий тест', async ({ page }) => {
-    await page.goto('/tests/unknown-slug')
-    await expect(page.getByText('Тест не найден')).toBeVisible()
-    await page.getByRole('link', { name: 'К списку тестов' }).click()
-    await expect(page).toHaveURL(/\/tests$/)
+  test('цепочка заглушек create → generating → journey → report', async ({
+    page,
+  }) => {
+    await page.goto('/create')
+    await page.getByRole('link', { name: 'Далее (заглушка)' }).click()
+    await expect(page).toHaveURL(/\/generating$/)
+    await page.getByRole('link', { name: 'Открыть заглушку прохождения' }).click()
+    await expect(page).toHaveURL(/\/journey\/demo$/)
+    await page.getByRole('link', { name: 'К отчёту (заглушка)' }).click()
+    await expect(page).toHaveURL(/\/journey\/demo\/report$/)
+    await expect(
+      page.getByRole('heading', { name: 'Отчёт о путешествии' }),
+    ).toBeVisible()
   })
 })

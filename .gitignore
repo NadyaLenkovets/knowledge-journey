@@ -11,6 +11,8 @@ node_modules
 dist
 dist-ssr
 *.local
+
+# Секреты: реальный ключ только локально (шаблон .env.example — можно коммитить)
 .env
 .env.*
 !.env.example
