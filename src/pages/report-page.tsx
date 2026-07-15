@@ -1,9 +1,10 @@
 import { Box, Button, Heading, Text, VStack } from '@chakra-ui/react'
 import { Link, useParams } from 'react-router-dom'
 import { NavBackLink } from '@/components/nav-back-link'
+import { ACHIEVEMENTS } from '@/types/gamification'
 import { loadJourney, loadProgress } from '@/store/journey-store'
 
-/** Краткий отчёт этапа 1; полный UI — этап 5. */
+/** Краткий отчёт; полный UI — этап 5. */
 export function ReportPage() {
   const { id } = useParams<{ id: string }>()
   const journey = id ? loadJourney(id) : null
@@ -15,6 +16,8 @@ export function ReportPage() {
     progress?.results.reduce((s, r) => s + r.maxScore, 0) ?? 0
   const percent =
     maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0
+  const timeouts =
+    progress?.results.filter((r) => r.status === 'timeout').length ?? 0
 
   return (
     <Box maxW="720px">
@@ -35,12 +38,24 @@ export function ReportPage() {
             <Text color="fg">
               Результат: {percent}% ({totalScore.toFixed(1)} / {maxScore})
             </Text>
+            <Text color="fg">
+              Опыт: {progress?.xp ?? 0} XP · серия (лучшая):{' '}
+              {progress?.bestStreak ?? 0}
+              {timeouts > 0 ? ` · таймаутов: ${timeouts}` : ''}
+            </Text>
+            {(progress?.unlockedAchievements?.length ?? 0) > 0 && (
+              <Text fontSize="sm" color="accent">
+                Достижения:{' '}
+                {progress!.unlockedAchievements!
+                  .map((aid) => ACHIEVEMENTS[aid].title)
+                  .join(' · ')}
+              </Text>
+            )}
             <Text fontSize="sm" color="fg.muted">
               {journey.sourceSummary}
             </Text>
             <Text fontSize="sm" color="fg.muted">
-              Разбор по каждому ответу и печать — этап 5. Сейчас достаточно
-              увидеть итог demo.
+              Подробный разбор по ответам и печать — этап 5.
             </Text>
           </>
         ) : (

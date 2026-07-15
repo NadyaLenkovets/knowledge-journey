@@ -116,7 +116,7 @@ export const checkpointSchema = z.object({
   concept: z.string().min(1),
   dependsOn: z.array(z.string()),
   difficulty: z.union([z.literal(1), z.literal(2), z.literal(3)]),
-  timeLimitSec: z.number().int().min(60).max(900),
+  timeLimitSec: z.number().int().min(30).max(900),
   activities: z.array(activitySchema).min(1).max(5),
 })
 

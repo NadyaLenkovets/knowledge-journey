@@ -24,6 +24,10 @@ export type JourneyProgress = {
   currentFlatIndex: number
   completed: boolean
   updatedAt: string
+  xp?: number
+  streak?: number
+  bestStreak?: number
+  unlockedAchievements?: import('@/types/gamification').AchievementId[]
 }
 
 export type FlatActivityStep = {

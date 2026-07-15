@@ -1,80 +1,94 @@
 import { Box, Heading, HStack, Progress, Text, VStack } from '@chakra-ui/react'
-import { useCallback, useMemo, useState } from 'react'
+import { useEffect, useMemo, useReducer } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ActivityStep } from '@/components/journey/activity-step'
+import { CheckpointTimer } from '@/components/journey/checkpoint-timer'
+import { XpBar } from '@/components/journey/xp-bar'
 import { NavBackLink } from '@/components/nav-back-link'
+import { useCheckpointTimer } from '@/hooks/use-checkpoint-timer'
 import type { ActivityResult } from '@/types/activity'
 import type { Journey } from '@/types/journey'
 import { answerStatusProgress, palette } from '@/theme/palette'
 import { saveProgress } from '@/store/journey-store'
-import { activityTypeLabel, flattenJourney } from '@/utils/journey'
+import { flattenJourney, activityTypeLabel } from '@/utils/journey'
+import {
+  createJourneyRunState,
+  journeyRunReducer,
+} from '@/utils/journey-run-reducer'
 
 type JourneyRunnerProps = {
   journey: Journey
 }
 
-type Phase = 'running' | 'finished'
-
-function statusFromResult(result: ActivityResult): keyof typeof answerStatusProgress {
+function statusFromResult(
+  result: ActivityResult,
+): keyof typeof answerStatusProgress {
   if (result.status === 'correct') return 'correct'
   if (result.status === 'partial') return 'partial'
   return 'incorrect'
 }
 
+type TimerSlotProps = {
+  timeLimitSec: number
+  paused: boolean
+  enabled: boolean
+  onExpire: () => void
+  questionInBlock: number
+  questionsInBlock: number
+}
+
+function CheckpointTimerSlot({
+  timeLimitSec,
+  paused,
+  enabled,
+  onExpire,
+  questionInBlock,
+  questionsInBlock,
+}: TimerSlotProps) {
+  const { remainingSec, urgent, totalSec } = useCheckpointTimer({
+    timeLimitSec,
+    paused,
+    enabled,
+    onExpire,
+  })
+
+  return (
+    <CheckpointTimer
+      remainingSec={remainingSec}
+      totalSec={totalSec}
+      urgent={urgent}
+      questionInBlock={questionInBlock}
+      questionsInBlock={questionsInBlock}
+    />
+  )
+}
+
 export function JourneyRunner({ journey }: JourneyRunnerProps) {
   const navigate = useNavigate()
   const steps = useMemo(() => flattenJourney(journey), [journey])
-  const [phase, setPhase] = useState<Phase>('running')
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [results, setResults] = useState<ActivityResult[]>([])
-  const [awaitingNext, setAwaitingNext] = useState(false)
-
-  const current = steps[currentIndex]
-  const totalScore = results.reduce((s, r) => s + r.score, 0)
-  const maxScore = results.reduce((s, r) => s + r.maxScore, 0)
-
-  const persist = useCallback(
-    (nextResults: ActivityResult[], nextIndex: number, completed: boolean) => {
-      saveProgress({
-        journeyId: journey.id,
-        results: nextResults,
-        currentFlatIndex: nextIndex,
-        completed,
-        updatedAt: new Date().toISOString(),
-      })
-    },
-    [journey.id],
+  const [state, dispatch] = useReducer(
+    journeyRunReducer,
+    undefined,
+    createJourneyRunState,
   )
 
-  const handleResult = useCallback(
-    (result: ActivityResult) => {
-      setResults((prev) => {
-        const next = [...prev, result]
-        persist(next, currentIndex, false)
-        return next
-      })
-      setAwaitingNext(true)
-    },
-    [currentIndex, persist],
-  )
+  const current = steps[state.currentIndex]
+  const totalScore = state.results.reduce((s, r) => s + r.score, 0)
+  const maxScore = state.results.reduce((s, r) => s + r.maxScore, 0)
 
-  const handleNext = useCallback(() => {
-    setAwaitingNext(false)
-    if (currentIndex + 1 >= steps.length) {
-      setResults((prev) => {
-        persist(prev, currentIndex, true)
-        return prev
-      })
-      setPhase('finished')
-      return
-    }
-    setCurrentIndex((i) => i + 1)
-  }, [currentIndex, persist, steps.length])
-
-  const handleFinishNavigate = () => {
-    persist(results, steps.length, true)
-    void navigate(`/journey/${journey.id}/report`)
-  }
+  useEffect(() => {
+    saveProgress({
+      journeyId: journey.id,
+      results: state.results,
+      currentFlatIndex: state.currentIndex,
+      completed: state.phase === 'finished',
+      updatedAt: new Date().toISOString(),
+      xp: state.game.xp,
+      streak: state.game.streak,
+      bestStreak: state.game.bestStreak,
+      unlockedAchievements: state.game.unlockedAchievements,
+    })
+  }, [journey.id, state])
 
   if (steps.length === 0) {
     return (
@@ -85,7 +99,7 @@ export function JourneyRunner({ journey }: JourneyRunnerProps) {
     )
   }
 
-  if (phase === 'finished') {
+  if (state.phase === 'finished') {
     const percent =
       maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0
     return (
@@ -96,11 +110,12 @@ export function JourneyRunner({ journey }: JourneyRunnerProps) {
         </Heading>
         <Text color="fg.muted">
           {journey.title}: {percent}% · {totalScore.toFixed(1)} / {maxScore}{' '}
-          баллов · {results.length} заданий
+          баллов · {state.results.length} заданий · {state.game.xp} XP
         </Text>
+        <XpBar state={state.game} />
         <Box
           as="button"
-          onClick={handleFinishNavigate}
+          onClick={() => void navigate(`/journey/${journey.id}/report`)}
           alignSelf="flex-start"
           px={5}
           py={3}
@@ -120,8 +135,13 @@ export function JourneyRunner({ journey }: JourneyRunnerProps) {
 
   if (!current) return null
 
+  const questionsInBlock = steps.filter(
+    (s) => s.checkpointIndex === current.checkpointIndex,
+  ).length
+  const questionInBlock = current.activityIndex + 1
+
   const displayPercent = Math.round(
-    ((currentIndex + (awaitingNext ? 1 : 0)) / steps.length) * 100,
+    ((state.currentIndex + (state.awaitingNext ? 1 : 0)) / steps.length) * 100,
   )
 
   return (
@@ -130,30 +150,53 @@ export function JourneyRunner({ journey }: JourneyRunnerProps) {
 
       <Box>
         <Text fontSize="sm" color="accent" mb={1}>
-          Чекпоинт {current.checkpointIndex + 1} из{' '}
-          {journey.checkpoints.length}: {current.checkpoint.title}
+          Блок {current.checkpointIndex + 1} из {journey.checkpoints.length}:{' '}
+          {current.checkpoint.title}
         </Text>
         <Heading size="lg" color="fg" mb={2}>
           {journey.title}
         </Heading>
         <Text color="fg.muted" fontSize="sm">
-          {current.checkpoint.concept} · шаг {currentIndex + 1} из{' '}
-          {steps.length} · {activityTypeLabel(current.activity.type)}
+          {current.checkpoint.concept}
+        </Text>
+        <Text color="fg.muted" fontSize="sm" mt={1}>
+          Вопрос {questionInBlock} из {questionsInBlock} в этом блоке · шаг{' '}
+          {state.currentIndex + 1} из {steps.length} в путешествии ·{' '}
+          {activityTypeLabel(current.activity.type)}
         </Text>
       </Box>
 
+      <XpBar state={state.game} />
+
+      <CheckpointTimerSlot
+        key={current.checkpoint.id}
+        timeLimitSec={current.checkpoint.timeLimitSec}
+        paused={state.awaitingNext}
+        enabled={state.phase === 'running'}
+        onExpire={() => dispatch({ type: 'timeout', steps })}
+        questionInBlock={questionInBlock}
+        questionsInBlock={questionsInBlock}
+      />
+
       <HStack gap={2} flexWrap="wrap" aria-label="Прогресс по шагам">
         {steps.map((step, i) => {
-          const done = i < results.length
+          const done = state.results.some(
+            (r) => r.activityId === step.activity.id,
+          )
           let bg: string = answerStatusProgress.pending.bg
           let border: string = answerStatusProgress.pending.border
           let color: string = answerStatusProgress.pending.color
           if (done) {
-            const s = answerStatusProgress[statusFromResult(results[i])]
-            bg = s.bg
-            border = s.border
-            color = s.color
-          } else if (i === currentIndex) {
+            const result = state.results.find(
+              (r) => r.activityId === step.activity.id,
+            )
+            if (result) {
+              const s = answerStatusProgress[statusFromResult(result)]
+              bg = s.bg
+              border = s.border
+              color = s.color
+            }
+          } else if (i === state.currentIndex) {
             const s = answerStatusProgress.active
             bg = s.bg
             border = s.border
@@ -196,7 +239,7 @@ export function JourneyRunner({ journey }: JourneyRunnerProps) {
             <Progress.Range bg={palette.accent} transition="width 0.3s" />
           </Progress.Track>
         </Progress.Root>
-        {results.length > 0 && (
+        {state.results.length > 0 && (
           <Text fontSize="sm" color="fg.muted" mt={2}>
             Набрано: {totalScore.toFixed(1)} / {maxScore}
           </Text>
@@ -207,8 +250,9 @@ export function JourneyRunner({ journey }: JourneyRunnerProps) {
         <ActivityStep
           key={current.activity.id}
           activity={current.activity}
-          onResult={handleResult}
-          onNext={handleNext}
+          onResult={(result) => dispatch({ type: 'result', result, steps })}
+          onNext={() => dispatch({ type: 'next', steps })}
+          disabled={state.timedOut}
         />
       </Box>
     </VStack>

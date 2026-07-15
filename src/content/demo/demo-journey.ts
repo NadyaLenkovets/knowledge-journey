@@ -15,7 +15,7 @@ const rawDemoJourney = {
       concept: 'Определение галлюцинации',
       dependsOn: [],
       difficulty: 1 as const,
-      timeLimitSec: 180,
+      timeLimitSec: 60,
       activities: [
         {
           id: 'demo-sc-1',
@@ -79,7 +79,7 @@ const rawDemoJourney = {
       concept: 'Причины галлюцинаций',
       dependsOn: ['cp-what'],
       difficulty: 2 as const,
-      timeLimitSec: 210,
+      timeLimitSec: 60,
       activities: [
         {
           id: 'demo-tf-1',
@@ -116,7 +116,7 @@ const rawDemoJourney = {
       concept: 'Признаки и проверка',
       dependsOn: ['cp-why'],
       difficulty: 2 as const,
-      timeLimitSec: 240,
+      timeLimitSec: 75,
       activities: [
         {
           id: 'demo-mc-1',
@@ -166,7 +166,7 @@ const rawDemoJourney = {
       concept: 'Снижение риска',
       dependsOn: ['cp-spot'],
       difficulty: 3 as const,
-      timeLimitSec: 240,
+      timeLimitSec: 75,
       activities: [
         {
           id: 'demo-order-1',
