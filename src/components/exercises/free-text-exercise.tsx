@@ -61,6 +61,7 @@ export function FreeTextExercise({
       maxScore={result?.maxScore}
       explanation={null}
       feedbackMessage={feedback}
+      referenceAnswer={config.modelAnswer}
       onCheck={handleCheck}
       canCheck={text.trim().length > 0 && !checking}
       hint={config.hint}

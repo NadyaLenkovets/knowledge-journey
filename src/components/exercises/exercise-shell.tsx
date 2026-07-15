@@ -15,6 +15,8 @@ type ExerciseShellProps = {
   explanation: ExerciseExplanation | null
   /** Переопределяет текст explanation (свободные ответы / demo-grade). */
   feedbackMessage?: string | null
+  /** Эталонный ответ — показываем после проверки (открытые типы). */
+  referenceAnswer?: string | null
   onCheck?: () => void
   onNext?: () => void
   canCheck?: boolean
@@ -50,6 +52,7 @@ export function ExerciseShell({
   maxScore,
   explanation,
   feedbackMessage = null,
+  referenceAnswer = null,
   onCheck,
   onNext,
   canCheck = true,
@@ -179,6 +182,29 @@ export function ExerciseShell({
             </HStack>
             <Text color={palette.fg} lineHeight="tall" fontSize="md">
               {feedbackBody}
+            </Text>
+          </Box>
+        )}
+
+        {isAnswered && referenceAnswer?.trim() && (
+          <Box
+            p={4}
+            borderRadius="md"
+            borderWidth="1px"
+            borderColor={palette.border}
+            bg={palette.surfaceElevated}
+            data-testid="reference-answer"
+          >
+            <Text
+              fontSize="sm"
+              fontWeight="600"
+              color={palette.accent}
+              mb={2}
+            >
+              Эталонный ответ
+            </Text>
+            <Text color={palette.fg} lineHeight="tall" fontSize="md">
+              {referenceAnswer.trim()}
             </Text>
           </Box>
         )}

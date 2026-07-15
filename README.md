@@ -61,7 +61,7 @@ npm run dev:all
 | `/create` | Тема/текст + demo |
 | `/generating` | Генерация через API |
 | `/journey/:id` | Прохождение |
-| `/journey/:id/report` | Отчёт |
+| `/journey/:id/report` | Отчёт (разбор + печать) |
 
 ## Команды
 

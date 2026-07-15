@@ -12,27 +12,36 @@
 
 ## Этап 4 — Hono + OpenRouter
 
+- Статус: `accepted`
+- Дата приёмки: 2026-07-15
+
+### Сделано
+
+- `server/`: OpenRouter client, free-only, generate/grade + normalize JSON
+- Фронт create/generating, demo fallback, remote grade для non-demo
+- `npm run dev:all`, ключ только в `.env`
+
+---
+
+## Этап 5 — Полный отчёт + печать
+
 - Статус: `waiting_review`
 - Дата: 2026-07-15
 
 ### Сделано
 
-- `server/`: OpenRouter client, enforce free-модели, промпты generate/grade
-- `POST /api/generate-journey`, `POST /api/grade-answer`, `GET /api/health`
-- Zod + 1 repair-retry при битом JSON
-- Фронт: `src/api/client.ts`, экран create с темой/текстом, generating с ошибками и fallback demo
-- Свободные ответы / bridge: remote grade если journey ≠ `demo`, иначе локально; при сбое API — локальный fallback
-- `npm run dev:all`, README про `.env` и два процесса
-- Ключ не уходит в браузер
+- Сводка: %, XP, streak / bestStreak, таймауты, достижения с описаниями
+- Разбор по блокам: тип, prompt, ответ, статус, score, feedback, explanation / эталон
+- Кнопка «Печать / PDF» + `src/styles/print.css` (скрывает header и CTA)
+- Утилиты `build-report`, `format-user-answer` + тесты
 
 ### Как проверить
 
-1. `cp .env.example .env` → вставить `OPENROUTER_API_KEY`
-2. `npm run dev:server:local` и `npm run dev` (или `dev:all`)
-3. `/create` — статус «API готов»; ввести тему → **Сгенерировать journey**
-4. Пройти свободный ответ — фидбек от API (смотрите Network: только `/api/...`)
-5. Без ключа / без server: **Пройти demo** по-прежнему работает
-6. `npm run test` / `npm run build`
+1. `npm run dev:all` (или `dev` + `dev:server`)
+2. Пройти **demo** (или live journey) до конца → **К отчёту**
+3. На `/journey/:id/report` — сводка и разбор ответов с фидбеком
+4. **Печать / PDF** — в превью печати нет шапки сайта и кнопок
+5. `npm run test` / `npm run build`
 
 ### Заметки ревью
 
@@ -40,6 +49,6 @@ _(заполняете вы)_
 
 ---
 
-## Этапы 5–6
+## Этап 6
 
-Следующий после приёмки: **Этап 5** — полный отчёт + печать; **Этап 6** — тесты smoke.
+Следующий после приёмки: smoke-тесты (Vitest/Playwright).
