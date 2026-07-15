@@ -1,52 +1,73 @@
-# Knowledge Journey
+﻿# Knowledge Journey
 
 Интерактивная система обучения: тема или текст → AI генерирует journey → прохождение под таймером → финальный отчёт.
 
-Стек и визуал основаны на Prompt Lab (Модуль 1): React 19, TypeScript, Vite, Chakra UI v3, палитра `#161616` / `#84CC16`.
+Стек: React 19, TypeScript, Vite, Chakra UI v3, Hono (API), OpenRouter free. Визуал Prompt Lab (`#161616` / `#84CC16`).
 
-Прогресс по этапам: [PROGRESS.md](./PROGRESS.md).
+Прогресс: [PROGRESS.md](./PROGRESS.md).
+
+## Архитектура AI
+
+```
+Браузер → POST /api/generate-journey | /api/grade-answer → Hono (server/)
+         → Authorization + модель openrouter/free → OpenRouter
+```
+
+Ключ только в `.env` на сервере, не в браузере.
 
 ## Локальный запуск
 
-Нужны Node.js 20+ и npm.
+Node.js 20+, npm.
 
 ```bash
 cd "Модуль 2/Knowledge-Journey"
 npm install
-npm run dev
+cp .env.example .env
+# вставьте OPENROUTER_API_KEY=sk-or-v1-... из https://openrouter.ai/keys
 ```
 
-Открыть: http://localhost:5173/home (ширина окна ≥ 1280px).
-
-**Demo без API:** `/create` → кнопка «Пройти demo» → пройти шаги → отчёт.
-
-Опционально API-заглушка (health):
+Два процесса:
 
 ```bash
-cp .env.example .env
-npm run dev:server
+npm run dev:server   # API :3001 (читает .env с ключом)
+npm run dev          # Vite :5173
 ```
 
-Vite проксирует `/api` → `http://localhost:3001`.
+Или одной командой (нужен ключ в `.env`):
 
-## Маршруты (этап 0)
+```bash
+npm run dev:all
+```
+
+Открыть: http://localhost:5173/home (≥ 1280px).
+
+### Demo без ключа
+
+`/create` → **Пройти demo** — без запросов к OpenRouter.
+
+### Live-генерация
+
+1. Заполните тему (≥ 3) или текст (≥ 40 символов).
+2. **Сгенерировать journey** → экран генерации → прохождение.
+3. Свободные ответы оценивает `/api/grade-answer` (если API доступен; иначе локальный fallback).
+
+Лимиты free OpenRouter: ~20 req/min, ~50/day без депозита.
+
+## Маршруты
 
 | URL | Экран |
 |-----|--------|
-| `/` | → `/home` |
 | `/home` | Главная |
-| `/create` | Создание journey (заглушка) |
-| `/generating` | Генерация (заглушка) |
-| `/journey/:id` | Прохождение (заглушка) |
-| `/journey/:id/report` | Отчёт (заглушка) |
+| `/create` | Тема/текст + demo |
+| `/generating` | Генерация через API |
+| `/journey/:id` | Прохождение |
+| `/journey/:id/report` | Отчёт |
 
 ## Команды
 
 | Команда | Назначение |
 |---------|------------|
 | `npm run dev` | Vite |
-| `npm run dev:server` | Hono API (`/api/health`) |
-| `npm run build` | Production-сборка |
-| `npm run lint` | ESLint |
-| `npm run test` | Vitest |
-| `npm run test:e2e` | Playwright smoke |
+| `npm run dev:server` | Hono с `.env` |
+| `npm run dev:all` | Vite + Hono |
+| `npm run build` / `lint` / `test` / `test:e2e` | Сборка и проверки |

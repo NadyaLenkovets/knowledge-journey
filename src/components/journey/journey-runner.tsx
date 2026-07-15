@@ -253,6 +253,7 @@ export function JourneyRunner({ journey }: JourneyRunnerProps) {
           onResult={(result) => dispatch({ type: 'result', result, steps })}
           onNext={() => dispatch({ type: 'next', steps })}
           disabled={state.timedOut}
+          useRemoteGrade={journey.id !== 'demo'}
         />
       </Box>
     </VStack>

@@ -3,7 +3,8 @@ import { useState } from 'react'
 import type { FreeTextActivityConfig, ActivityResult } from '@/types/activity'
 import type { ExerciseMode } from '@/types/exercise'
 import { useExerciseState } from '@/hooks/use-exercise-state'
-import { activityTypeLabel, gradeFreeLocally } from '@/utils/journey'
+import { activityTypeLabel } from '@/utils/journey'
+import { gradeOpenActivity } from '@/utils/grade-open-activity'
 import { ExerciseShell } from './exercise-shell'
 
 type FreeTextExerciseProps = {
@@ -13,6 +14,7 @@ type FreeTextExerciseProps = {
   onResult?: (result: ActivityResult) => void
   onNext?: () => void
   disabled?: boolean
+  useRemoteGrade?: boolean
 }
 
 export function FreeTextExercise({
@@ -22,23 +24,30 @@ export function FreeTextExercise({
   onResult,
   onNext,
   disabled = false,
+  useRemoteGrade = false,
 }: FreeTextExerciseProps) {
   const [text, setText] = useState('')
   const [feedback, setFeedback] = useState<string | null>(null)
+  const [checking, setChecking] = useState(false)
   const { uiState, result, submit } = useExerciseState()
   const isAnswered = uiState === 'answered'
 
   const handleCheck = () => {
-    const graded = gradeFreeLocally(config, text)
-    setFeedback(graded.feedback ?? null)
-    submit({
-      exerciseId: config.id,
-      isCorrect: graded.status === 'correct',
-      score: graded.score,
-      maxScore: graded.maxScore,
-      userAnswer: text,
-    })
-    onResult?.(graded)
+    if (checking || isAnswered) return
+    setChecking(true)
+    void gradeOpenActivity(config, text, { useRemote: useRemoteGrade })
+      .then((graded) => {
+        setFeedback(graded.feedback ?? null)
+        submit({
+          exerciseId: config.id,
+          isCorrect: graded.status === 'correct',
+          score: graded.score,
+          maxScore: graded.maxScore,
+          userAnswer: text,
+        })
+        onResult?.(graded)
+      })
+      .finally(() => setChecking(false))
   }
 
   return (
@@ -53,11 +62,15 @@ export function FreeTextExercise({
       explanation={null}
       feedbackMessage={feedback}
       onCheck={handleCheck}
-      canCheck={text.trim().length > 0}
+      canCheck={text.trim().length > 0 && !checking}
       hint={config.hint}
       disabled={disabled}
       accentBorder="#84CC16"
-      checkHint="Напишите ответ, затем нажмите «Проверить ответ»"
+      checkHint={
+        checking
+          ? 'Оцениваем ответ…'
+          : 'Напишите ответ, затем нажмите «Проверить ответ»'
+      }
     >
       <Box>
         <Text fontSize="xs" color="#84CC16" fontWeight="600" mb={2}>
@@ -78,7 +91,7 @@ export function FreeTextExercise({
         borderColor="#3F3F46"
         color="#FFFFFF"
         placeholder="Ваш ответ…"
-        disabled={isAnswered || disabled}
+        disabled={isAnswered || disabled || checking}
         _focus={{ borderColor: '#84CC16', outline: 'none' }}
       />
     </ExerciseShell>

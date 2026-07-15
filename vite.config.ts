@@ -14,6 +14,9 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:3001',
         changeOrigin: true,
+        // free-модели OpenRouter + retry ремонта могут занять 1–3 мин
+        timeout: 180_000,
+        proxyTimeout: 180_000,
       },
     },
   },

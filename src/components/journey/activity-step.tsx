@@ -19,6 +19,7 @@ type ActivityStepProps = {
   onResult: (result: ActivityResult) => void
   onNext: () => void
   disabled?: boolean
+  useRemoteGrade?: boolean
 }
 
 export function ActivityStep({
@@ -26,6 +27,7 @@ export function ActivityStep({
   onResult,
   onNext,
   disabled = false,
+  useRemoteGrade = false,
 }: ActivityStepProps) {
   if (isFreeTextActivity(activity)) {
     return (
@@ -35,6 +37,7 @@ export function ActivityStep({
         onResult={onResult}
         onNext={onNext}
         disabled={disabled}
+        useRemoteGrade={useRemoteGrade}
       />
     )
   }
@@ -47,6 +50,7 @@ export function ActivityStep({
         onResult={onResult}
         onNext={onNext}
         disabled={disabled}
+        useRemoteGrade={useRemoteGrade}
       />
     )
   }
