@@ -115,6 +115,7 @@ export function JourneyRunner({ journey }: JourneyRunnerProps) {
         <XpBar state={state.game} />
         <Box
           as="button"
+          data-testid="go-to-report"
           onClick={() => void navigate(`/journey/${journey.id}/report`)}
           alignSelf="flex-start"
           px={5}

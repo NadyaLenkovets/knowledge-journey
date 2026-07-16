@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:server": "tsx watch --env-file=.env server/index.ts",
-    "dev:server:example": "tsx watch --env-file=.env server/index.ts",
+    "dev:server": "tsx --env-file=.env server/index.ts",
+    "dev:server:example": "tsx --env-file=.env server/index.ts",
     "dev:all": "concurrently -n web,api -c green,cyan \"npm run dev\" \"npm run dev:server\"",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
@@ -14,8 +14,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:all": "npm run test && npm run test:e2e",
-    "test:e2e": "npm run build && playwright test",
-    "test:e2e:ui": "npm run build && playwright test --ui"
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
     "@chakra-ui/react": "^3.35.0",

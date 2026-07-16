@@ -25,30 +25,33 @@
 
 ## Этап 5 — Полный отчёт + печать
 
-- Статус: `waiting_review`
-- Дата: 2026-07-15
+- Статус: `accepted`
+- Дата приёмки: 2026-07-16
 
 ### Сделано
 
-- Сводка: %, XP, streak / bestStreak, таймауты, достижения с описаниями
-- Разбор по блокам: тип, prompt, ответ, статус, score, feedback, explanation / эталон
-- Кнопка «Печать / PDF» + `src/styles/print.css` (скрывает header и CTA)
-- Утилиты `build-report`, `format-user-answer` + тесты
-
-### Как проверить
-
-1. `npm run dev:all` (или `dev` + `dev:server`)
-2. Пройти **demo** (или live journey) до конца → **К отчёту**
-3. На `/journey/:id/report` — сводка и разбор ответов с фидбеком
-4. **Печать / PDF** — в превью печати нет шапки сайта и кнопок
-5. `npm run test` / `npm run build`
-
-### Заметки ревью
-
-_(заполняете вы)_
+- Сводка + разбор по блокам + «Печать / PDF» + print CSS
+- Эталон после проверки открытых ответов
 
 ---
 
-## Этап 6
+## Этап 6 — Smoke-тесты
 
-Следующий после приёмки: smoke-тесты (Vitest/Playwright).
+- Статус: `accepted`
+- Дата приёмки: 2026-07-16
+
+### Сделано
+
+- Playwright smoke: home / create / health mock / demo старт
+- Полный прогон demo → «Journey завершён» → отчёт (разбор + print)
+- Generating без API → fallback demo
+- Helpers: `e2e/helpers/journey-actions.ts` (активности demo)
+- `beforeEach`-мок `/api/health` (без proxy noise в preview)
+- `npm run test:e2e` (webServer сам делает build + preview)
+- Unit: существующие Vitest остаются в `npm run test` / `test:all`
+
+---
+
+## Итог
+
+Этапы **0–6** приняты. MVP Knowledge Journey закрыт по плану этапов.

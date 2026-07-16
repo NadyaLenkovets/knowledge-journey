@@ -1,73 +1,118 @@
 ﻿# Knowledge Journey
 
-Интерактивная система обучения: тема или текст → AI генерирует journey → прохождение под таймером → финальный отчёт.
+Интерактивное учебное SPA: тема или текст → AI собирает journey из блоков → прохождение с таймером, XP и серией → финальный отчёт с разбором и печатью.
 
-Стек: React 19, TypeScript, Vite, Chakra UI v3, Hono (API), OpenRouter free. Визуал Prompt Lab (`#161616` / `#84CC16`).
+Основано на визуале и стеке [Prompt Lab](https://github.com/NadyaLenkovets/prompt-lab) (`#161616` / `#84CC16`). UI на русском. Десктоп **≥ 1280px**.
 
-Прогресс: [PROGRESS.md](./PROGRESS.md).
+Прогресс этапов: [PROGRESS.md](./PROGRESS.md) (MVP этапы 0–6 приняты).
+
+## Возможности
+
+- **Demo** без ключа OpenRouter (тема «Галлюцинации LLM»)
+- **Live-генерация** через OpenRouter free (`openrouter/free` или `*:free`)
+- Чекпоинты с таймером на блок, закрытые и открытые упражнения, `buildTheBridge`
+- XP, streak, достижения
+- Оценка свободных ответов через `/api/grade-answer` (для demo — локально; при сбое API — fallback)
+- Отчёт: %, XP, разбор по блокам, эталон, **Печать / PDF**
+
+## Стек
+
+React 19 · TypeScript · Vite · Chakra UI v3 · Hono · Zod · Vitest · Playwright
 
 ## Архитектура AI
 
 ```
-Браузер → POST /api/generate-journey | /api/grade-answer → Hono (server/)
-         → Authorization + модель openrouter/free → OpenRouter
+Браузер  →  /api/* (Vite proxy → :3001)
+Hono     →  OpenRouter chat completions (ключ из .env)
 ```
 
-Ключ только в `.env` на сервере, не в браузере.
+| Endpoint | Назначение |
+|----------|------------|
+| `GET /api/health` | Статус API и наличие ключа |
+| `POST /api/generate-journey` | Сборка journey по теме/тексту |
+| `POST /api/grade-answer` | Оценка свободного ответа |
 
-## Локальный запуск
+Ключ **не** попадает в браузер. Ответ модели нормализуется и проверяется Zod (с одним repair-retry).
 
-Node.js 20+, npm.
+## Быстрый старт
+
+Нужны Node.js 20+ и npm.
 
 ```bash
 cd "Модуль 2/Knowledge-Journey"
 npm install
-cp .env.example .env
-# вставьте OPENROUTER_API_KEY=sk-or-v1-... из https://openrouter.ai/keys
 ```
 
-Два процесса:
+Создайте файл `.env` в корне и укажите ключ с [openrouter.ai/keys](https://openrouter.ai/keys):
 
-```bash
-npm run dev:server   # API :3001 (читает .env с ключом)
-npm run dev          # Vite :5173
+```env
+OPENROUTER_API_KEY=sk-or-v1-...
+OPENROUTER_MODEL=openrouter/free
+PORT=3001
 ```
 
-Или одной командой (нужен ключ в `.env`):
+Запуск фронта и API:
 
 ```bash
 npm run dev:all
 ```
 
-Открыть: http://localhost:5173/home (≥ 1280px).
+Откройте http://localhost:5173/home
 
-### Demo без ключа
+По отдельности:
 
-`/create` → **Пройти demo** — без запросов к OpenRouter.
+```bash
+npm run dev:server   # API http://localhost:3001
+npm run dev          # Vite http://localhost:5173
+```
 
-### Live-генерация
+> Без ключа и без API работает **Пройти demo** на `/create`.
 
-1. Заполните тему (≥ 3) или текст (≥ 40 символов).
-2. **Сгенерировать journey** → экран генерации → прохождение.
-3. Свободные ответы оценивает `/api/grade-answer` (если API доступен; иначе локальный fallback).
+## Как пользоваться
 
-Лимиты free OpenRouter: ~20 req/min, ~50/day без депозита.
+### Demo
+
+`/create` → **Пройти demo** → блоки под таймером → **К отчёту**.
+
+### Live
+
+1. Тема (≥ 3 символов) или текст (≥ 40).
+2. **Сгенерировать journey** (нужны API + ключ).
+3. Пройти journey → отчёт → при желании **Печать / PDF**.
+
+Лимиты free OpenRouter без депозита обычно около **20 req/min** и **50/day** — генерация может занять десятки секунд.
 
 ## Маршруты
 
 | URL | Экран |
 |-----|--------|
 | `/home` | Главная |
-| `/create` | Тема/текст + demo |
-| `/generating` | Генерация через API |
+| `/create` | Тема / текст, demo, статус API |
+| `/generating` | Ожидание генерации (fallback → demo) |
 | `/journey/:id` | Прохождение |
-| `/journey/:id/report` | Отчёт (разбор + печать) |
+| `/journey/:id/report` | Отчёт и печать |
 
 ## Команды
 
 | Команда | Назначение |
 |---------|------------|
-| `npm run dev` | Vite |
-| `npm run dev:server` | Hono с `.env` |
-| `npm run dev:all` | Vite + Hono |
-| `npm run build` / `lint` / `test` / `test:e2e` | Сборка и проверки |
+| `npm run dev` | Vite (dev) |
+| `npm run dev:server` | Hono API с `.env` |
+| `npm run dev:all` | Vite + API |
+| `npm run build` | Production-сборка |
+| `npm run lint` | ESLint |
+| `npm run test` | Vitest (unit) |
+| `npm run test:e2e` | Playwright smoke (сам поднимает preview) |
+| `npm run test:all` | unit + e2e |
+
+При первом e2e: `npx playwright install chromium`.
+
+## Структура (кратко)
+
+```
+src/          # UI, store, схемы, demo-journey
+server/       # Hono, OpenRouter, промпты, нормализация JSON
+e2e/          # Playwright smoke
+```
+
+`.env` в git не коммитится — держите ключ только локально.

@@ -38,7 +38,7 @@ app.post('/api/generate-journey', async (c) => {
   if (!configured) {
     return c.json(
       {
-        error: 'Ключ OpenRouter не задан. Скопируйте .env.example → .env и вставьте OPENROUTER_API_KEY.',
+        error: 'Ключ OpenRouter не задан. Создайте .env и вставьте OPENROUTER_API_KEY.',
         code: 'NO_API_KEY',
       },
       401,

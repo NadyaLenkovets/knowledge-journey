@@ -12,10 +12,9 @@ dist
 dist-ssr
 *.local
 
-# Секреты: реальный ключ только локально (шаблон .env.example — можно коммитить)
+# Секреты: реальный ключ только локально
 .env
 .env.*
-!.env.example
 
 # Playwright
 test-results/

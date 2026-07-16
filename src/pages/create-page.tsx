@@ -101,8 +101,8 @@ export function CreatePage() {
           bg="rgba(234, 179, 8, 0.1)"
         >
           <Text fontSize="sm" color="#EAB308">
-            Сервер запущен, но OPENROUTER_API_KEY пуст. Скопируйте .env.example →
-            .env и вставьте ключ. Пока можно пройти demo.
+            Сервер запущен, но OPENROUTER_API_KEY пуст. Создайте файл .env в корне
+            проекта и вставьте ключ. Пока можно пройти demo.
           </Text>
         </Box>
       )}
