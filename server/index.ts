@@ -2,7 +2,7 @@ import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { z } from 'zod'
-import { generateJourneyFromAi, gradeAnswerFromAi } from './ai-service.ts'
+import { generateJourneyFromAi, gradeAnswerFromAi, nextStepsFromAi } from './ai-service.ts'
 import { getOpenRouterConfig } from './openrouter.ts'
 
 const app = new Hono()
@@ -128,6 +128,58 @@ app.post('/api/grade-answer', async (c) => {
       {
         error: message,
         code: status === 429 ? 'RATE_LIMIT' : 'GRADE_FAILED',
+      },
+      status >= 400 && status < 600 ? status : 502,
+    )
+  }
+})
+
+const nextStepsBodySchema = z.object({
+  title: z.string().min(1),
+  sourceSummary: z.string().min(1),
+  percent: z.number().min(0).max(100),
+  blocks: z
+    .array(
+      z.object({
+        title: z.string().min(1),
+        concept: z.string().min(1),
+        percent: z.number().min(0).max(100),
+        weakHints: z.array(z.string()).default([]),
+      }),
+    )
+    .min(1),
+})
+
+app.post('/api/next-steps', async (c) => {
+  const { configured } = getOpenRouterConfig()
+  if (!configured) {
+    return c.json(
+      { error: 'Ключ OpenRouter не задан на сервере', code: 'NO_API_KEY' },
+      401,
+    )
+  }
+
+  let body: z.infer<typeof nextStepsBodySchema>
+  try {
+    body = nextStepsBodySchema.parse(await c.req.json())
+  } catch {
+    return c.json({ error: 'Некорректное тело запроса', code: 'BAD_REQUEST' }, 400)
+  }
+
+  try {
+    const result = await nextStepsFromAi(body)
+    return c.json({ ...result, source: 'ai' as const })
+  } catch (err) {
+    const status =
+      err && typeof err === 'object' && 'status' in err
+        ? Number((err as { status: number }).status)
+        : 502
+    const message = err instanceof Error ? err.message : 'Ошибка рекомендаций'
+    console.error('[next-steps] failed:', message)
+    return c.json(
+      {
+        error: message,
+        code: status === 429 ? 'RATE_LIMIT' : 'NEXT_STEPS_FAILED',
       },
       status >= 400 && status < 600 ? status : 502,
     )

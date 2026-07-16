@@ -3,6 +3,7 @@ import { Box, Button, HStack, Text, VStack } from '@chakra-ui/react'
 import { Link, useParams } from 'react-router-dom'
 import { NavBackLink } from '@/components/nav-back-link'
 import { ReportCheckpointBlockView } from '@/components/report/report-checkpoint-block'
+import { ReportNextSteps } from '@/components/report/report-next-steps'
 import { ReportSummary } from '@/components/report/report-summary'
 import { loadJourney, loadProgress } from '@/store/journey-store'
 import { buildJourneyReport } from '@/utils/build-report'
@@ -70,6 +71,8 @@ export function ReportPage() {
                 />
               ))}
             </Box>
+
+            <ReportNextSteps report={report} />
           </>
         ) : (
           <>

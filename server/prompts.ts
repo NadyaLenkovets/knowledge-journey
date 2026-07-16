@@ -80,6 +80,38 @@ export const GRADE_SYSTEM = `Ты проверяешь ответ студент
 - feedback должен помогать понять, чего не хватает.
 - Не ссылайся на «пример» / «эталон» / modelAnswer фразами вроде «как в примере» — студент сначала не видит эталон. Сформулируй недостающую мысль своими словами.`
 
+export const NEXT_STEPS_SYSTEM = `Ты учебный коуч. По результатам прохождения journey предложи, что изучить дальше.
+Язык — русский. Верни ТОЛЬКО JSON:
+{
+  "summary": "1–2 предложения итога",
+  "recommendations": [
+    {
+      "title": "короткий заголовок",
+      "why": "почему это важно сейчас (опираясь на слабые зоны)",
+      "action": "конкретный следующий шаг на 1–2 предложения"
+    }
+  ]
+}
+Правила:
+- 2–4 рекомендации, без воды и без маркетинга.
+- Опирайся на слабые блоки (низкий %), таймауты и feedback.
+- Не выдумывай внешние курсы/ссылки, которых нет во входе.
+- Если результат высокий — предложи углубление и практику, не «вы всё знаете».`
+
+export function buildNextStepsUserMessage(input: {
+  title: string
+  sourceSummary: string
+  percent: number
+  blocks: Array<{
+    title: string
+    concept: string
+    percent: number
+    weakHints: string[]
+  }>
+}): string {
+  return JSON.stringify(input, null, 2)
+}
+
 export function buildGradeUserMessage(input: {
   activityType: string
   prompt: string

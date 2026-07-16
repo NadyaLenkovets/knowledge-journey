@@ -104,3 +104,33 @@ export async function gradeAnswer(
   if (!res.ok) throw await parseError(res)
   return (await res.json()) as GradeAnswerResponse
 }
+
+export type NextStepsRequest = {
+  title: string
+  sourceSummary: string
+  percent: number
+  blocks: Array<{
+    title: string
+    concept: string
+    percent: number
+    weakHints: string[]
+  }>
+}
+
+export type NextStepsResponse = {
+  summary: string
+  recommendations: Array<{ title: string; why: string; action: string }>
+  source: 'ai' | 'local'
+}
+
+export async function fetchNextSteps(
+  body: NextStepsRequest,
+): Promise<NextStepsResponse> {
+  const res = await fetch('/api/next-steps', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) throw await parseError(res)
+  return (await res.json()) as NextStepsResponse
+}

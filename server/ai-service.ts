@@ -5,8 +5,10 @@ import { normalizeJourneyPayload } from './normalize-journey.ts'
 import {
   GENERATE_SYSTEM,
   GRADE_SYSTEM,
+  NEXT_STEPS_SYSTEM,
   buildGenerateUserMessage,
   buildGradeUserMessage,
+  buildNextStepsUserMessage,
 } from './prompts.ts'
 import { safeParseJourney } from '../src/schemas/journey.ts'
 
@@ -108,6 +110,53 @@ export async function gradeAnswerFromAi(input: {
   } catch (first) {
     const hint = first instanceof Error ? first.message : 'invalid json'
     const raw2 = await completeJson(GRADE_SYSTEM, user, hint)
+    return tryParse(raw2)
+  }
+}
+
+const nextStepsSchema = z.object({
+  summary: z.string().min(1),
+  recommendations: z
+    .array(
+      z.object({
+        title: z.string().min(1),
+        why: z.string().min(1),
+        action: z.string().min(1),
+      }),
+    )
+    .min(1)
+    .max(6),
+})
+
+export type NextStepsFromAi = z.infer<typeof nextStepsSchema>
+
+export async function nextStepsFromAi(input: {
+  title: string
+  sourceSummary: string
+  percent: number
+  blocks: Array<{
+    title: string
+    concept: string
+    percent: number
+    weakHints: string[]
+  }>
+}): Promise<NextStepsFromAi> {
+  const user = buildNextStepsUserMessage(input)
+  const tryParse = (raw: unknown) => {
+    try {
+      return nextStepsSchema.parse(raw)
+    } catch (err) {
+      if (err instanceof z.ZodError) throw new Error(formatZodIssues(err))
+      throw err
+    }
+  }
+
+  try {
+    const raw = await completeJson(NEXT_STEPS_SYSTEM, user)
+    return tryParse(raw)
+  } catch (first) {
+    const hint = first instanceof Error ? first.message : 'invalid json'
+    const raw2 = await completeJson(NEXT_STEPS_SYSTEM, user, hint)
     return tryParse(raw2)
   }
 }
